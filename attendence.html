@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lal Bahadur Shastri Attendance</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      margin: 0; 
+      padding: 0; 
+      background-color: #f4f4f9; 
+    }
+
+    header {
+      background-color: #4CAF50;
+      color: white;
+      padding: 20px 0;
+      text-align: center;
+      font-size: 36px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 95%;
+      margin: 20px auto;
+      background-color: white;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: center;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    th {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    td {
+      background-color: #fff;
+    }
+
+    .locked {
+      background-color: #eee !important;
+      color: #888;
+      cursor: not-allowed;
+    }
+
+    #loginBtn {
+      display: block;
+      margin: 20px auto;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    #loginBtn:hover {
+      background-color: #45a049;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <h1>Lal Bahadur Shastri Attendance</h1>
+  </header>
+
+  <!-- Admin login button -->
+  <button id="loginBtn" onclick="adminLogin()">🔐 Admin Login</button>
+
+  <!-- Attendance Table -->
+  <table id="attendanceTable">
+    <thead id="thead"></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+
+  <script>
+    // Pre-defined student names
+    const students = ["Rahul", "Priya", "Ramesh", "Neha", "Amit", "Simran", "Arun"];
+
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const todayDate = today.getDate();
+    const monthName = today.toLocaleString('default', { month: 'long' });
+    const daysInMonth = new Date(year, month + 1, 0).getDate();  // Days in current month
+    const isAfter830PM = today.getHours() > 20 || (today.getHours() === 20 && today.getMinutes() >= 30);
+    let isAdmin = false;  // Admin flag
+
+    // Generate table header
+    let headRow = "<tr><th>Name</th>";
+    for (let i = 1; i <= daysInMonth; i++) {
+      headRow += `<th>${i}</th>`;
+    }
+    headRow += `<th>P</th><th>A</th><th>L</th></tr>`;
+    document.getElementById("thead").innerHTML = headRow;
+
+    // Generate table body for students
+    const tbody = document.getElementById("tbody");
+    students.forEach(name => {
+      let row = `<tr data-name="${name}"><td>${name}</td>`;
+      for (let i = 1; i <= daysInMonth; i++) {
+        const isPast = i < todayDate;
+        const isToday = i === todayDate;
+        let lock = "";
+
+        // If it's a past day or after 8:30 PM, lock attendance
+        if (isPast || (isToday && isAfter830PM)) {
+          lock = "locked";
+        }
+
+        row += `<td class="${lock}" onclick="toggleStatus(this, ${i})"></td>`;
+      }
+      row += `<td class="summary" data-type="P">0</td>
+              <td class="summary" data-type="A">0</td>
+              <td class="summary" data-type="L">0</td></tr>`;
+      tbody.innerHTML += row;
+    });
+
+    // Toggle attendance status for each cell
+    function toggleStatus(cell, day) {
+      if (cell.classList.contains("locked") && !isAdmin) return;
+
+      const cycle = ["", "P", "A", "L"];  // Cycle through P, A, L for attendance
+      const current = cell.textContent;
+      const next = cycle[(cycle.indexOf(current) + 1) % cycle.length];
+      cell.textContent = next;
+      cell.className = next;
+      updateSummary(cell.parentElement);
+    }
+
+    // Update attendance summary (P, A, L counts)
+    function updateSummary(row) {
+      let p = 0, a = 0, l = 0;
+      const cells = row.querySelectorAll("td");
+      for (let i = 1; i <= daysInMonth; i++) {
+        const val = cells[i].textContent;
+        if (val === "P") p++;
+        if (val === "A") a++;
+        if (val === "L") l++;
+      }
+      row.querySelector('[data-type="P"]').textContent = p;
+      row.querySelector('[data-type="A"]').textContent = a;
+      row.querySelector('[data-type="L"]').textContent = l;
+    }
+
+    // Admin login function to unlock attendance after 8:30 PM
+    function adminLogin() {
+      const pass = prompt("Enter admin password:");
+      if (pass === "admin123") {
+        isAdmin = true;
+        alert("✅ Admin mode ON - You can edit locked attendance.");
+      } else {
+        alert("❌ Incorrect password!");
+      }
+    }
+  </script>
+
+</body>
+</html>
